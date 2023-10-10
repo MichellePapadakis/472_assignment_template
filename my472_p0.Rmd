@@ -1,58 +1,88 @@
 ---
-title: "Assignment Template"
-author: "Dr Thomas Robinson and Dr Dan de Kadt"
-date: "AT 2023"
-output: html_document
+title: 'Assignment #1 (formative)'
+author: "Michelle Papadakis Barradas"
+date: "This assignment is due Thursday 12 October 2023 at 4pm"
 ---
 
 ```{r setup, include=FALSE} 
-# this chunk contains code that sets global options for the entire .Rmd. 
-# we use include=FALSE to suppress it from the top of the document, but it will still appear in the appendix. 
-
-knitr::opts_chunk$set(echo = FALSE) # actually set the global chunk options. 
-# we set echo=FALSE to suppress code such that it by default does not appear throughout the document. 
-# note: this is different from .Rmd default
+knitr::opts_chunk$set(echo = FALSE) 
 ```
 
-This document contains the necessary commands and layout to meet the formatting requirements for MY472. You should use the template.Rmd file as the basis for your own answers to the assigned exercises.
+## Exercise 1
+### Forking a repository 
 
-## Formatting requirements
+"My forked version of the assignment template repository can be found at: https://github.com/MichellePapadakis/472_assignment_template" 
 
-* You must present all results in full sentences, as you would in a report or academic piece of writing
-  
-  * If the exercise requires generating a table or figure, you should include at least one sentence introducing and explaining it. E.g. "The table below reports the counts of Wikipedia articles mentioning the LSE, by type of article."
 
-* Unless stated otherwise, all code used to answer the exercises should be included as a code appendix at the end of the script. This formatting can be achieved by following the guidance in this template file.
+## Exercise 2
+### Tidy data
+The data from the built-in dataset used for this exercise was *HairEyeColor* which **is** _tidy_. We can verify this by examining the structure of the built-in dataset *HairEyeColor* and confirm that it complies to the three principles of a _*tidy data*_ which are:
 
-* All code should be annotated with comments, to help the marker understand what you have done
+1. Each value occupies its own cell. 
+2. Each observation corresponds to its own row. 
+3. Each variable is allocated its own column.
 
-* Your output should be replicable. Any result/table/figure that cannot be traced back to your code will not be marked
+We could transform our data frame and maintain the _tidy version_  by pivoting it wider adding two columns, each for each sex. This transformation enables a better visualization by gender.
 
-## Example of in-line figures without code
 
-For those interested, we achieve the formatting requirements in two-steps: 1) in the `setup` chunk, we set `knitr::opts_chunk$set(echo = FALSE)` so that code is not included (echoed) by default in code chunks; 2) we add a specific chunk at the end of the file to collect and print *all* the code in the Rmarkdown file. Do not delete the final code chunk from the template!
+To _*untidy*_ the data we could pivot the original data frame into a longer version. In this case we could pass the information contained in the coumns *Hair* and *Eyes* to one column named *Attribute* and assign the values to a column named *Colour*. In summary I merge two variables, which originally had their own separate columns, into a single column called 'attributes. The values were grouped under the 'colours' column. This transformation resulted in an untidy format for the data frame.
 
-For example, below we use a code chunk to generate random data and include a scatter plot in-line. The code used to generate this chart is only reported at the end of the document. 
+```{r exercise # 2, warning=FALSE, message=FALSE}
+#To work with the built-in data frames and table transformations, the tidyr package will be used. If the package is not installed, the following line should be uncommented.
+#installed.packages("tidyverse")
+library("tidyverse")
+#Looking at built-in dataset from R, in this the data set is called "HairEyeColor"
+data("HairEyeColor")
+#Transforming the data set into Tibbles
+HEC <- as.tibble(HairEyeColor)
+#Pivoting wider to better fit the data 
+HECw <- pivot_wider (HEC, 
+                   names_from = "Sex", 
+                   values_from = "n")
+#Pivot longer to untidy de data, in this case we merge the two variables Hair and Color that previously had their own separate columns into one column named Attributes and created another called Colour to store the values.
 
-```{r plot_example}
-set.seed(89) # set a seed for R's psuedo-randomiser, for replicability.
-x <- rnorm(100) # randomly draw 100 obs from normal distribution, save as object
-y <- rnorm(100) 
-plot(x,y) # two-way scatterplot using R's default plotting
+HECl <- HEC %>%
+  pivot_longer(cols = c(Hair, Eye),
+               names_to = "Attribute",
+               values_to = "Colour")
+```
+``````{r, echo=TRUE}
+#Figure 1, original tidy
+head(HEC)
+#Figure 2, wide tidy
+head(HECw)
+#Figure 3, long untidy
+head(HECl)
 ```
 
-In specific instances, however, you may be directed to report your code in-line (or you may want to do this to illustrate a specific point). In these cases, we can override the default behaviour by adding the chunk option `echo = TRUE` to a specific R chunk. When `echo=TRUE`, your code is presented in-line with any output displayed afterwards. The same code will also be included in the appendix at the bottom of the document (which is fine).
+## Exercise 3
+### Transforming data
 
-```{r echo_example, echo=TRUE}
-# {[language] [chunk_name], [chunk_options]}
-# here we use echo=TRUE to override our global options and make the chunk appear exactly here. 
 
-print("This code chunk is visible in this section.")
+```{r, exercise 3, echo=TRUE}
+
+#Calling a built in data set and transforming it to tibble to better manipulation
+data("population")
+population_tibble <- as.tibble(population)
+head(population_tibble)
+
+#Converting the 'population' data frame into a tidy format, where each year has its own column, eliminating the need to repeat the country name for each year's data.
+population_tibble_w <- population_tibble %>%
+  pivot_wider(names_from = year, values_from = population)
+head(population_tibble_w)
+
+#To calculate the mean population for each country over the span of 19 years, we can approach it as a two-step process. First, we compute the total population for each year across all countries. Subsequently, we employ a mutation operation to divide the cumulative population total by the number of observations to get the mean population (in this case because we wanted to transform a numeric variable after having called summarise() according the instructions.  
+ 
+exercise_3 <- population_tibble_w %>%
+  group_by(country) %>%
+  summarise(sumPop_1995to2013 = sum(c_across(c("1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013")), na.rm = TRUE)) %>%
+ mutate(meanPop_1995to2013 = ((sumPop_1995to2013)/19))
+head(exercise_3)
+
 ```
 
 ## Appendix: All code in this assignment
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE} 
-# this chunk generates the complete code appendix. 
-# eval=FALSE tells R not to run (``evaluate'') the code here (it was already run before).
+{r knitr::opts_chunk$set(warning = FALSE, message = FALSE)}
 ```
